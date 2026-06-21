@@ -69,12 +69,7 @@ class Assistant(Agent):
         session = context.session
         logger.info(f"Switching language: {self._current_lang} -> {language}")
 
-        session.stt.update_options(
-            languages=[config["stt_lang"]],
-            detect_language=False,
-        )
-
-        # Update TTS voice/language to match.
+        # Only switch TTS — STT stays multilingual with detect_language=True
         session.tts.update_options(
             language=config["tts_lang"],
             voice_name=config["voice_name"],
