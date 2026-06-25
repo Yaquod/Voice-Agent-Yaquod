@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from collections.abc import AsyncGenerator, AsyncIterable
 
 import requests
 from dotenv import load_dotenv
@@ -8,9 +9,16 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 from livekit import agents
-from livekit.agents import Agent, AgentServer, AgentSession, RunContext, function_tool
-from livekit.agents.inference import TurnDetector
-from livekit.plugins import google
+from livekit.agents import (
+    Agent,
+    AgentServer,
+    AgentSession,
+    RunContext,
+    TurnHandlingOptions,
+    function_tool,
+    inference,
+)
+from livekit.plugins import silero
 
 _TASHKEEL_RE = re.compile(r"[\u064B-\u065F\u0670]")
 
@@ -28,9 +36,14 @@ STARTER_GREETING = (
     "RESPONSE: Keep responses short, warm, and conversational."
 )
 
+_ARABIC_VOICE = (
+    "f786b574-daa5-4673-aa0c-cbe3e8534c02"  # Katie (Cartesia default) — multilingual, works with ar
+)
+_ENGLISH_VOICE = "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # Jacqueline — en-US female
+
 LANGUAGE_CONFIGS = {
-    "ar": {"stt_lang": "ar-EG", "tts_lang": "ar-XA", "voice_name": "ar-XA-Chirp3-HD-Aoede"},
-    "en": {"stt_lang": "en-US", "tts_lang": "en-US", "voice_name": "en-US-Chirp3-HD-Aoede"},
+    "ar": {"stt_lang": "ar", "tts_lang": "ar", "voice_id": _ARABIC_VOICE},
+    "en": {"stt_lang": "en", "tts_lang": "en", "voice_id": _ENGLISH_VOICE},
 }
 
 DEFAULT_LANG = "ar"
@@ -100,7 +113,9 @@ class Assistant(Agent):
         )
         self._current_lang = DEFAULT_LANG
 
-    async def transcription_node(self, text, model_settings):
+    async def transcription_node(
+        self, text: AsyncIterable[str], model_settings: object
+    ) -> AsyncGenerator[str, None]:
         async for chunk in text:
             if isinstance(chunk, str):
                 yield _strip_tashkeel(chunk)
@@ -121,8 +136,8 @@ class Assistant(Agent):
         logger.info(f"Switching language: {self._current_lang} -> {language}")
 
         session.tts.update_options(
+            voice=config["voice_id"],
             language=config["tts_lang"],
-            voice_name=config["voice_name"],
         )
 
         self._current_lang = language
@@ -170,23 +185,24 @@ async def my_agent(ctx: agents.JobContext):
     default_config = LANGUAGE_CONFIGS[DEFAULT_LANG]
 
     session = AgentSession(
-        # Speech-to-Text
-        stt=google.STT(
-            languages=[default_config["stt_lang"], LANGUAGE_CONFIGS["en"]["stt_lang"]],
-            detect_language=True,
-            model="chirp_3",
-            location="us",
-            # ),
-            #  llm=openai.LLM.with_ollama(
-            # model="llama3.1:8b",
-            # base_url=os.getenv("OLLAMA_BASE_URL"),
+        stt=inference.STT(
+            model="deepgram/nova-3",
+            language="multi",
+            extra_kwargs={
+                "punctuate": True,
+                "smart_format": True,
+            },
         ),
-        llm=google.LLM(model="gemini-3.1-flash-lite"),
-        tts=google.TTS(
+        llm=inference.LLM(model="google/gemini-3.1-flash-lite"),
+        tts=inference.TTS(
+            model="cartesia/sonic-3",
+            voice=default_config["voice_id"],
             language=default_config["tts_lang"],
-            voice_name=default_config["voice_name"],
         ),
-        turn_detection=TurnDetector(),
+        turn_handling=TurnHandlingOptions(
+            turn_detection="vad",
+        ),
+        vad=silero.VAD.load(),
     )
 
     await session.start(room=ctx.room, agent=Assistant())

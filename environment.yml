@@ -7,7 +7,6 @@ dependencies:
   - pip
   - pip:
       - livekit-agents
-      - livekit-plugins-google
       - livekit-plugins-silero
       - livekit-plugins-turn-detector
       - python-dotenv
