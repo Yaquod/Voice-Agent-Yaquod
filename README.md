@@ -1,13 +1,13 @@
 # Yaquod Agent
 
-A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit Agents** and **LiveKit Inference** (Deepgram STT + Cartesia TTS + Gemini LLM).
+A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit Agents** with **Azure Speech STT**, **Cartesia TTS**, and **Gemini LLM**.
 
 ## Features
 
 - **Real-time voice conversation** with low-latency streaming
-- **Arabic & English support** with automatic language detection
+- **Arabic (Egyptian) & English support** with automatic language detection
 - **Dynamic language switching** — the agent detects when you switch languages and responds in kind
-- **Deepgram Nova-3** for speech-to-text (via LiveKit Inference)
+- **Azure Speech Services** for speech-to-text (`ar-EG` / `en-US`)
 - **Cartesia Sonic-3** for text-to-speech (via LiveKit Inference)
 - **Google Gemini 3.1 Flash Lite** for conversational LLM (via LiveKit Inference)
 - **Multilingual turn detection** for natural conversation flow
@@ -15,8 +15,8 @@ A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit A
 ## Prerequisites
 
 - Python 3.11+
-- A [LiveKit Cloud](https://livekit.io) account
 - A [LiveKit Cloud](https://livekit.io) account with Inference enabled (included on all plans)
+- An [Azure Speech Services](https://azure.microsoft.com/en-us/products/ai-services/ai-speech) resource (free tier works)
 
 ## Setup
 
@@ -29,11 +29,21 @@ A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit A
 
 2. **Configure environment variables:**
 
-   Copy `.env-example` to `.env` and fill in your LiveKit Cloud credentials:
+   Copy `.env-example` to `.env` and fill in your credentials:
 
    ```bash
    cp .env-example .env
    ```
+
+   Required variables:
+
+   | Variable | Description |
+   |---|---|
+   | `LIVEKIT_URL` | LiveKit Cloud WebSocket URL |
+   | `LIVEKIT_API_KEY` | LiveKit Cloud API key |
+   | `LIVEKIT_API_SECRET` | LiveKit Cloud API secret |
+   | `AZURE_SPEECH_KEY` | Azure Speech Services key |
+   | `AZURE_SPEECH_REGION` | Azure Speech Services region (e.g. `eastus`) |
 
 3. **Run the agent:**
 
@@ -72,7 +82,7 @@ To run the LLM locally with Ollama instead of LiveKit Inference:
    ollama serve
    ```
 
-> Note: STT and TTS still use LiveKit Inference (Deepgram + Cartesia). Only the LLM changes.
+> Note: STT uses Azure Speech (not LiveKit Inference) and TTS uses LiveKit Inference (Cartesia). Only the LLM changes.
 
 ## Linting & Formatting
 
@@ -111,4 +121,11 @@ The agent greets in Arabic by default. Speak in Arabic or English — it auto-de
 - `pyproject.toml` — Linting and formatting configuration (ruff)
 - `tests/` — Unit tests for the agent configuration
 
-The agent uses LiveKit Agents **v1 session API** (`Agent`, `AgentServer`, `AgentSession`) with `inference.STT` (Deepgram Nova-3), `inference.LLM` (Gemini 3.1 Flash Lite), and `inference.TTS` (Cartesia Sonic-3), plus `TurnDetector` for turn detection. All AI models are accessed through LiveKit Inference — no separate API keys required beyond LiveKit Cloud credentials.
+The agent uses LiveKit Agents **v1 session API** (`Agent`, `AgentServer`, `AgentSession`):
+
+- **STT**: `azure.STT` (Azure Speech Services) with candidate languages `["ar-EG", "en-US"]`
+- **LLM**: `inference.LLM` (Gemini 3.1 Flash Lite) via LiveKit Inference
+- **TTS**: `inference.TTS` (Cartesia Sonic-3) via LiveKit Inference
+- **VAD**: Silero VAD for turn detection
+
+Azure Speech requires its own API key and region. LiveKit Inference handles the rest (LLM, TTS) — no separate API keys needed beyond LiveKit Cloud credentials.
