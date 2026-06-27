@@ -18,4 +18,4 @@ dependencies:
       - ruff
       - pytest
       - pytest-asyncio
-      - httpx
+      - httpx2

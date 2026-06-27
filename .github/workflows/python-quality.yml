@@ -33,7 +33,7 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          pip install fastapi pydantic httpx pytest pytest-asyncio requests python-dotenv
+          pip install fastapi pydantic httpx2 pytest pytest-asyncio requests python-dotenv
 
       - name: Run tests
         run: |
