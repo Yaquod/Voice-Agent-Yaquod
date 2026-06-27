@@ -19,3 +19,4 @@ dependencies:
       - pytest
       - pytest-asyncio
       - httpx2
+      - uvicorn
