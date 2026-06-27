@@ -17,3 +17,17 @@ ALLOWED_ACTIONS = {
     "cancel_destination",
     "safe_stop",
 }
+
+VALID_ZONES = {"left", "right", "both"}
+
+VALID_WINDOWS = {
+    "all",
+    "front_left",
+    "front_right",
+    "rear_left",
+    "rear_right",
+}
+
+VALID_FAN_SPEEDS = {0, 1, 2, 3, 4, 5}
+
+VALID_AIRFLOW_MODES = {"face", "feet", "face_feet"}
