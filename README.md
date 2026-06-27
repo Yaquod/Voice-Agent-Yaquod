@@ -1,21 +1,22 @@
 # Yaquod Agent
 
-A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit Agents** and **Google Vertex AI (Gemini) / Ollama**.
+A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit Agents** with **Azure Speech STT**, **Cartesia TTS**, and **Gemini LLM**.
 
 ## Features
 
 - **Real-time voice conversation** with low-latency streaming
-- **Arabic & English support** with automatic language detection
+- **Arabic (Egyptian) & English support** with automatic language detection
 - **Dynamic language switching** — the agent detects when you switch languages and responds in kind
-- **Google Chirp 3** for speech-to-text and text-to-speech
-- **Gemini 2.5 Flash** for conversational LLM
+- **Azure Speech Services** for speech-to-text (`ar-EG` / `en-US`)
+- **Cartesia Sonic-3** for text-to-speech (via LiveKit Inference)
+- **Google Gemini 3.1 Flash Lite** for conversational LLM (via LiveKit Inference)
 - **Multilingual turn detection** for natural conversation flow
 
 ## Prerequisites
 
 - Python 3.11+
-- A [LiveKit Cloud](https://livekit.io) account
-- A Google Cloud project with Vertex AI API enabled and a service account
+- A [LiveKit Cloud](https://livekit.io) account with Inference enabled (included on all plans)
+- An [Azure Speech Services](https://azure.microsoft.com/en-us/products/ai-services/ai-speech) resource (free tier works)
 
 ## Setup
 
@@ -34,7 +35,15 @@ A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit A
    cp .env-example .env
    ```
 
-   Place your Google Cloud service account key at `service-account.json`.
+   Required variables:
+
+   | Variable | Description |
+   |---|---|
+   | `LIVEKIT_URL` | LiveKit Cloud WebSocket URL |
+   | `LIVEKIT_API_KEY` | LiveKit Cloud API key |
+   | `LIVEKIT_API_SECRET` | LiveKit Cloud API secret |
+   | `AZURE_SPEECH_KEY` | Azure Speech Services key |
+   | `AZURE_SPEECH_REGION` | Azure Speech Services region (e.g. `eastus`) |
 
 3. **Run the agent:**
 
@@ -44,7 +53,7 @@ A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit A
 
 ## Alternative: Using Ollama (Llama) instead of Gemini
 
-To run the LLM locally with Ollama instead of Google Gemini:
+To run the LLM locally with Ollama instead of LiveKit Inference:
 
 1. **Install Ollama** from [ollama.ai](https://ollama.ai) and pull a model:
 
@@ -52,14 +61,13 @@ To run the LLM locally with Ollama instead of Google Gemini:
    ollama pull llama3.1:8b
    ```
 
-2. **In `agent.py`, uncomment the Ollama LLM block and comment out the Gemini line:**
+2. **In `agent.py`, replace the inference.LLM line with:**
 
    ```python
    llm=openai.LLM.with_ollama(
        model="llama3.1:8b",
        base_url=os.getenv("OLLAMA_BASE_URL"),
    ),
-   # llm=google.LLM(model='gemini-2.5-flash'),
    ```
 
 3. **Set `OLLAMA_BASE_URL` in `.env`** (defaults to `http://localhost:11434`):
@@ -74,7 +82,7 @@ To run the LLM locally with Ollama instead of Google Gemini:
    ollama serve
    ```
 
-> Note: With Ollama you still need Google Cloud credentials for STT and TTS (Chirp 3). Only the LLM changes.
+> Note: STT uses Azure Speech (not LiveKit Inference) and TTS uses LiveKit Inference (Cartesia). Only the LLM changes.
 
 ## Linting & Formatting
 
@@ -113,4 +121,11 @@ The agent greets in Arabic by default. Speak in Arabic or English — it auto-de
 - `pyproject.toml` — Linting and formatting configuration (ruff)
 - `tests/` — Unit tests for the agent configuration
 
-The agent uses LiveKit Agents **v1 session API** (`Agent`, `AgentServer`, `AgentSession`) with `google.STT`, `google.LLM`, and `google.TTS` plugins, plus `TurnDetector` for turn detection.
+The agent uses LiveKit Agents **v1 session API** (`Agent`, `AgentServer`, `AgentSession`):
+
+- **STT**: `azure.STT` (Azure Speech Services) with candidate languages `["ar-EG", "en-US"]`
+- **LLM**: `inference.LLM` (Gemini 3.1 Flash Lite) via LiveKit Inference
+- **TTS**: `inference.TTS` (Cartesia Sonic-3) via LiveKit Inference
+- **VAD**: Silero VAD for turn detection
+
+Azure Speech requires its own API key and region. LiveKit Inference handles the rest (LLM, TTS) — no separate API keys needed beyond LiveKit Cloud credentials.

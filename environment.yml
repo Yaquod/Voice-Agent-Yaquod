@@ -7,8 +7,8 @@ dependencies:
   - pip
   - pip:
       - livekit-agents
-      - livekit-plugins-google
       - livekit-plugins-silero
+      - livekit-plugins-azure
       - livekit-plugins-turn-detector
       - python-dotenv
       - llama-index
