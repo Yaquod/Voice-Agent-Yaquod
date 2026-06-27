@@ -10,6 +10,7 @@ dependencies = [
     "requests",
     "livekit-agents",
     "livekit-plugins-azure",
+    "livekit-plugins-openai",
     "livekit-plugins-silero",
     "livekit-plugins-turn-detector",
     "llama-index",
