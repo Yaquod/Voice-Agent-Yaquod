@@ -143,6 +143,12 @@ class TestSearchNearbyPlaces:
             result = await assistant.search_nearby_places(mock_context, query="coffee")
         assert "Unable to get vehicle location" in result
 
+    def _mock_location_get(self, mock_client, lat: float, lng: float):
+        mock_client.return_value.__aenter__.return_value.get.return_value = MagicMock(
+            is_success=True,
+            json=lambda: {"vehicle_id": "vehicle_001", "lat": lat, "lng": lng},
+        )
+
     async def test_successful_search_returns_formatted_results(self, assistant, mock_context):
         mock_places_response = {
             "places": [
@@ -164,29 +170,53 @@ class TestSearchNearbyPlaces:
             patch("agent.GOOGLE_MAPS_API_KEY", "test_key"),
             patch("httpx2.AsyncClient") as mock_client,
         ):
-            mock_client.return_value.__aenter__.return_value.get.return_value = MagicMock(
-                is_success=True,
-                json=lambda: {"vehicle_id": "vehicle_001", "lat": 30.0444, "lng": 31.2357},
-            )
+            self._mock_location_get(mock_client, lat=1.0, lng=2.0)
             mock_client.return_value.__aenter__.return_value.post.return_value = MagicMock(
                 status_code=200, json=lambda: mock_places_response
             )
             result = await assistant.search_nearby_places(mock_context, query="coffee")
+
         assert "Starbucks" in result
         assert "Local Cafe" in result
         assert "Open" in result
         assert "Closed" in result
         assert "Rating: 4.5" in result
 
+    async def test_search_places_api_request_shape(self, assistant, mock_context):
+        mock_lat, mock_lng = 1.0, 2.0
+        with (
+            patch("agent.GOOGLE_MAPS_API_KEY", "test_key"),
+            patch("httpx2.AsyncClient") as mock_client,
+        ):
+            self._mock_location_get(mock_client, lat=mock_lat, lng=mock_lng)
+            mock_post = mock_client.return_value.__aenter__.return_value.post
+            mock_post.return_value = MagicMock(status_code=200, json=lambda: {"places": []})
+            await assistant.search_nearby_places(mock_context, query="coffee")
+
+        mock_post.assert_called_once_with(
+            "https://places.googleapis.com/v1/places:searchText",
+            headers={
+                "X-Goog-Api-Key": "test_key",
+                "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.rating,places.currentOpeningHours.openNow",
+                "Content-Type": "application/json",
+            },
+            json={
+                "textQuery": "coffee",
+                "locationBias": {
+                    "circle": {
+                        "center": {"latitude": mock_lat, "longitude": mock_lng},
+                        "radius": 1500,
+                    }
+                },
+            },
+        )
+
     async def test_no_results_found(self, assistant, mock_context):
         with (
             patch("agent.GOOGLE_MAPS_API_KEY", "test_key"),
             patch("httpx2.AsyncClient") as mock_client,
         ):
-            mock_client.return_value.__aenter__.return_value.get.return_value = MagicMock(
-                is_success=True,
-                json=lambda: {"vehicle_id": "vehicle_001", "lat": 30.0444, "lng": 31.2357},
-            )
+            self._mock_location_get(mock_client, lat=1.0, lng=2.0)
             mock_client.return_value.__aenter__.return_value.post.return_value = MagicMock(
                 status_code=200, json=lambda: {"places": []}
             )
@@ -198,12 +228,9 @@ class TestSearchNearbyPlaces:
             patch("agent.GOOGLE_MAPS_API_KEY", "test_key"),
             patch("httpx2.AsyncClient") as mock_client,
         ):
-            mock_client.return_value.__aenter__.return_value.get.return_value = MagicMock(
-                is_success=True,
-                json=lambda: {"vehicle_id": "vehicle_001", "lat": 30.0444, "lng": 31.2357},
-            )
+            self._mock_location_get(mock_client, lat=1.0, lng=2.0)
             mock_client.return_value.__aenter__.return_value.post.return_value = MagicMock(
                 status_code=500
             )
             result = await assistant.search_nearby_places(mock_context, query="coffee")
-        assert "failed" in result or "unavailable" in result
+        assert result == "Places search failed. Please try again."

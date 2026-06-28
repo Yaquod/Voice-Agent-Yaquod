@@ -19,6 +19,6 @@ async def get_vehicle_location() -> VehicleLocation:
 
 @app.post("/api/vehicle/action")
 async def vehicle_action(data: VehicleAction):
-    logger.info("Action received:\n%s", data.model_dump_json(indent=2))
+    logger.info("Action received | vehicle_id=%s action=%s", data.vehicle_id, data.action)
 
     return {"status": "ok"}

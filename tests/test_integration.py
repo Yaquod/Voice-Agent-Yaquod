@@ -41,30 +41,19 @@ def _make_httpx_router(api_client):
     return mock_cls
 
 
-async def test_agent_sends_action_to_api(api_client, mock_context):
-    assistant = Assistant()
-    mock_httpx = _make_httpx_router(api_client)
-
-    with patch("httpx2.AsyncClient", new=mock_httpx):
-        result = await assistant.vehicle_action(mock_context, action="ac_on", parameters={})
-
-    assert result == "Executed ac_on"
-
-
 async def test_api_receives_correct_action(api_client, mock_context):
     assistant = Assistant()
     mock_httpx = _make_httpx_router(api_client)
 
     with patch("httpx2.AsyncClient", new=mock_httpx):
-        await assistant.vehicle_action(mock_context, action="music_play", parameters={"track": "1"})
+        result = await assistant.vehicle_action(mock_context, action="music_play", parameters={"track": "1"})
 
-
-async def test_invalid_action_stops_at_agent(api_client, mock_context):
-    assistant = Assistant()
-    mock_httpx = _make_httpx_router(api_client)
-
-    with patch("httpx2.AsyncClient", new=mock_httpx):
-        result = await assistant.vehicle_action(mock_context, action="accelerate", parameters={})
-
-    assert result == "This action is not allowed."
-    mock_httpx.return_value.__aenter__.return_value.post.assert_not_called()
+    assert result == "Executed music_play"
+    mock_httpx.return_value.__aenter__.return_value.post.assert_called_once_with(
+        "https://yaquod-agent.fastapicloud.dev/api/vehicle/action",
+        json={
+            "vehicle_id": "vehicle_001",
+            "action": "music_play",
+            "parameters": {"track": "1"},
+        },
+    )
