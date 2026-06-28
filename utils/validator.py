@@ -19,6 +19,25 @@ EXPECTED_PARAMETERS = {
     "safe_stop": set(),
 }
 
+EXPECTED_PARAMETERS = {
+    "ac_on": set(),
+    "ac_off": set(),
+    "set_temperature": {"zone", "temperature"},
+    "set_fan_speed": {"speed"},
+    "set_airflow_mode": {"mode"},
+    "climate_auto": {"enabled"},
+    "climate_sync": {"enabled"},
+    "window_open": {"window", "percentage"},
+    "window_close": {"window", "percentage"},
+    "music_play": set(),
+    "music_pause": set(),
+    "set_volume": {"change"},
+    "reading_light_on": set(),
+    "reading_light_off": set(),
+    "cancel_destination": set(),
+    "safe_stop": set(),
+}
+
 
 def validate_vehicle_action(action: str, parameters: dict | None) -> str | None:
     """
