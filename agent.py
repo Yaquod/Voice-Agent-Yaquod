@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import re
 from collections.abc import AsyncGenerator, AsyncIterable
 
@@ -120,6 +121,67 @@ class Assistant(Agent):
         except Exception as e:
             logger.error(f"API error: {e}")
             return "Vehicle system unavailable"
+
+    @function_tool
+    async def get_weather(
+        self,
+        context: RunContext,
+    ) -> str:
+        """
+        Fetches the current weather by locating the vehicle first via Vehicle API,
+        then calling WeatherAPI. Returns a localized message.
+        """
+        api_lang = self._current_lang if self._current_lang in ["ar", "en"] else "ar"
+        logger.info(f"Initiating weather fetch for vehicle. Language: {api_lang}")
+
+        # Get vehivle location
+        vehicle_location_url = "https://yaquod-agent.fastapicloud.dev/api/vehicle/location"
+
+        try:
+            loc_response = requests.get(
+                vehicle_location_url, headers={"accept": "application/json"}, timeout=5
+            )
+
+            if not loc_response.ok:
+                logger.error(f"Vehicle Location API error: {loc_response.status_code}")
+                return "Unable to determine vehicle location."
+
+            loc_data = loc_response.json()
+            lat = loc_data.get("lat")
+            lon = loc_data.get("lng")
+
+            if lat is None or lon is None:
+                return "Invalid vehicle coordinates."
+
+        except Exception as e:
+            logger.error(f"Failed to fetch vehicle location: {e}")
+            return "Vehicle tracking system unavailable."
+
+        # get weather details
+        weather_api_key = os.environ.get("WEATHER_API_KEY")
+        weather_url = "http://api.weatherapi.com/v1/current.json"
+
+        weather_params = {"key": weather_api_key, "q": f"{lat},{lon}", "lang": api_lang}
+
+        try:
+            weather_response = requests.get(weather_url, params=weather_params, timeout=5)
+
+            if weather_response.ok:
+                weather_data = weather_response.json()
+
+                city = weather_data["location"]["name"]
+                temp = weather_data["current"]["temp_c"]
+                condition = weather_data["current"]["condition"]["text"]
+
+                return f"The weather at the vehicle's location in {city} is {condition} with a temperature of {temp}°C."
+
+            else:
+                logger.error(f"Weather API error: {weather_response.status_code}")
+                return "Weather service error."
+
+        except Exception as e:
+            logger.error(f"Weather API exception: {e}")
+            return "Weather system unavailable."
 
 
 server = AgentServer()
