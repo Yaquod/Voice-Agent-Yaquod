@@ -1,5 +1,3 @@
-*Maintained by Yaquod AI Engineering team (Mohamed Kardosha, Khaled Helmy, Khaled Zakarya).*
-
 # Yaquod Agent
 
 A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit Agents** with **Azure Speech STT**, **Cartesia TTS**, and **Gemini LLM**.
@@ -163,9 +161,8 @@ The agent uses LiveKit Agents **v1 session API** (`Agent`, `AgentServer`, `Agent
 Azure Speech requires its own API key and region. LiveKit Inference handles the rest (LLM, TTS) — no separate API keys needed beyond LiveKit Cloud credentials.
 
 ## Contribution
-*Maintained by Khaled Zakaria, Khaled Helmy, and Mohamed Kardosha.*
+*Maintained by Yaquod AI Engineering team (Mohamed Kardosha, Khaled Helmy, Khaled Zakarya).*
 
-> **Note:** The commit `feat: implement vehicle action model and APIs` was authored by **Khaled Helmy** and reviewed by **Khaled Zakaria**. Their names do not appear in the commit history due to a necessary history rewrite for consistency.
 
 We accept contributions from all over the world! However, please note that our code is written in English and all commits should be in English.
 
