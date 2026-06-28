@@ -1,6 +1,4 @@
-*Maintained by Khaled Zakaria, Khaled Helmy, and Mohamed Kardosha.*
-
-> **Note:** The commit `feat: implement vehicle action model and APIs` was authored by **Khaled Helmy** and reviewed by **Khaled Zakaria**. Their names do not appear in the commit history due to a necessary history rewrite for consistency.
+*Maintained by Yaquod AI Engineering team (Mohamed Kardosha, Khaled Helmy, Khaled Zakarya).*
 
 # Yaquod Agent
 
