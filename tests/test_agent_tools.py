@@ -122,7 +122,9 @@ class TestVehicleAction:
                 mock_response = MagicMock()
                 mock_response.is_success = True
                 mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
-                result = await assistant.vehicle_action(mock_context, action=action, parameters=VALID_PARAMETERS[action])
+                result = await assistant.vehicle_action(
+                    mock_context, action=action, parameters=VALID_PARAMETERS[action]
+                )
             assert result == f"Executed {action}", f"Failed for action: {action}"
 
 
