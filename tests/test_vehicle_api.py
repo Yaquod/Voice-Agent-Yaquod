@@ -19,8 +19,8 @@ def test_valid_action_with_params():
         "/api/vehicle/action",
         json={
             "vehicle_id": "vehicle_001",
-            "action": "set_level",
-            "parameters": {"level": 3},
+            "action": "set_fan_speed",
+            "parameters": {"speed": 3},
         },
     )
     assert resp.status_code == 200

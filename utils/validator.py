@@ -31,7 +31,6 @@ EXPECTED_PARAMETERS = {
 }
 
 
-
 def validate_vehicle_action(action: str, parameters: dict | None) -> str | None:
     """
     Returns:
