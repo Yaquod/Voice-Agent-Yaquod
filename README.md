@@ -18,6 +18,7 @@ A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit A
 - Python 3.11+
 - A [LiveKit Cloud](https://livekit.io) account with Inference enabled (included on all plans)
 - An [Azure Speech Services](https://azure.microsoft.com/en-us/products/ai-services/ai-speech) resource (free tier works)
+- A free **WeatherAPI** account for weather information
 
 ## Setup
 
@@ -46,12 +47,21 @@ A bilingual (Arabic/English) real-time voice AI assistant powered by **LiveKit A
    | `AZURE_SPEECH_KEY` | Azure Speech Services key |
    | `AZURE_SPEECH_REGION` | Azure Speech Services region (e.g. `eastus`) |
    | `GOOGLE_MAPS_API_KEY` | Google Maps Places API key (required for nearby places search) |
+   | `WEATHER_API_KEY` | Your WeatherAPI.com API key (required for weather tool) |
 
 3. **Run the agent:**
 
    ```bash
    python agent.py start
    ```
+
+### Getting a Weather API Key
+
+The agent uses **WeatherAPI.com** to fetch real-time weather data based on the vehicle's location.
+
+1. Go to [WeatherAPI.com](https://www.weatherapi.com/) and click **Sign Up** to create a free account.
+2. Once logged in, go to your **Dashboard**.
+3. Copy your unique **API Key** from the dashboard.
 
 ## Alternative: Using Ollama (Llama) instead of Gemini
 
