@@ -1,4 +1,11 @@
-from config.constants import VALID_AIRFLOW_MODES, VALID_FAN_SPEEDS, VALID_WINDOWS, VALID_ZONES
+from config.constants import (
+    VALID_AIRFLOW_MODES,
+    VALID_FAN_SPEEDS,
+    VALID_LIGHT_TYPES,
+    VALID_SEAT_TYPE,
+    VALID_WINDOWS,
+    VALID_ZONES,
+)
 
 EXPECTED_PARAMETERS = {
     "ac_on": set(),
@@ -13,10 +20,14 @@ EXPECTED_PARAMETERS = {
     "music_play": set(),
     "music_pause": set(),
     "set_volume": {"change"},
-    "reading_light_on": set(),
-    "reading_light_off": set(),
+    "reading_light_on": {"light"},
+    "reading_light_off": {"light"},
     "cancel_destination": set(),
     "safe_stop": set(),
+    "seat_position": {"seat", "percentage"},
+    "seat_recline": {"seat", "percentage"},
+    "seat_height": {"seat", "percentage"},
+    "window_lock": set(),
 }
 
 
@@ -95,5 +106,27 @@ def validate_vehicle_action(action: str, parameters: dict | None) -> str | None:
 
         if not (-100 <= change <= 100):
             return "Volume change must be between -100 and 100."
+
+    elif action in ("seat_position", "seat_recline", "seat_height"):
+        seat = parameters.get("seat")
+        percentage = parameters.get("percentage")
+
+        if seat not in VALID_SEAT_TYPE:
+            return "not supported seat"
+
+        if type(percentage) is not int:
+            return "Invalid percentage."
+
+        if action == "seat_recline" and not (-90 <= percentage <= 100):
+            return "Percentage must be between -90 and 100"
+
+        if action in ("seat_position", "seat_height") and not (0 <= percentage <= 100):
+            return "Percentage must be between 0 and 100"
+
+    elif action in ("reading_light_on", "reading_light_off"):
+        light = parameters.get("light")
+
+        if light not in VALID_LIGHT_TYPES:
+            return "not supported light"
 
     return None
